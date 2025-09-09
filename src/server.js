@@ -15,6 +15,8 @@ app.use(cors());
 app.use(express.json());
 // Serve static files from src directory
 app.use(express.static(__dirname));
+// Serve sample text files
+app.use('/sample_text', express.static(join(__dirname, 'sample_text')));
 // Also serve test files from tests directory
 app.use('/tests', express.static(join(__dirname, '..', 'tests')));
 
@@ -39,8 +41,8 @@ IMPORTANT RULES:
 
 Your output must be EXACTLY in this format:
 
-INPUT:
-<s1>first sentence in original</s1><s2>second sentence</s2>...
+${inputLanguage.toUpperCase()}${inputLanguage === 'ancient' ? ' (文言文)' : ''}:
+<s1>first sentence in original ${languageDescriptions[inputLanguage]}</s1><s2>second sentence</s2>...
 `;
 
     // Add output sections based on selected languages
@@ -79,8 +81,17 @@ function parseTranslationResponse(response, inputLanguage, outputLanguages) {
         return result;
     }
     
-    // Extract input text
-    const inputMatch = response.match(/INPUT:\s*(.*?)(?=\n[A-Z]+:|$)/s);
+    // Extract input text based on input language
+    let inputPattern;
+    if (inputLanguage === 'ancient') {
+        inputPattern = /ANCIENT(?:\s*\(文言文\))?:\s*(.*?)(?=\n\n[A-Z]+|\n[A-Z]+(?:\s*\(|:)|$)/s;
+    } else if (inputLanguage === 'modern') {
+        inputPattern = /MODERN:\s*(.*?)(?=\n\n[A-Z]+|\n[A-Z]+(?:\s*\(|:)|$)/s;
+    } else if (inputLanguage === 'english') {
+        inputPattern = /ENGLISH:\s*(.*?)(?=\n\n[A-Z]+|\n[A-Z]+(?:\s*\(|:)|$)/s;
+    }
+    
+    const inputMatch = response.match(inputPattern);
     if (inputMatch) {
         result.original.text = inputMatch[1].trim();
     }

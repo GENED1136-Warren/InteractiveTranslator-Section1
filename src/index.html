@@ -212,7 +212,7 @@
         .chat-container {
             display: flex;
             flex-direction: column;
-            height: 300px; /* Increased from 120px to show input area */
+            height: 210px; /* 30% smaller than 300px */
             transition: height 0.3s ease;
             border: 1px solid rgba(139, 0, 0, 0.2);
             border-radius: 8px;
@@ -222,7 +222,7 @@
         }
         
         .chat-container.expanded {
-            height: 1250px; /* 250% of 500px original */
+            height: 875px; /* 30% smaller than 1250px */
         }
         
         .chat-messages {
@@ -395,11 +395,11 @@
                     <h3 class="font-medium mb-2 text-gray-700">輸入語言 · Input Language</h3>
                     <div class="space-y-2">
                         <label class="language-option flex items-center">
-                            <input type="radio" name="input-lang" value="ancient" class="mr-2">
+                            <input type="radio" name="input-lang" value="ancient" class="mr-2" checked>
                             <span>古文 · Classical/Ancient Chinese (文言文)</span>
                         </label>
                         <label class="language-option flex items-center">
-                            <input type="radio" name="input-lang" value="modern" class="mr-2" checked>
+                            <input type="radio" name="input-lang" value="modern" class="mr-2">
                             <span>現代中文 · Modern Chinese (简体)</span>
                         </label>
                         <label class="language-option flex items-center">
@@ -552,7 +552,7 @@
             originalText: '',
             sentences: new Map(),
             selectedSentences: new Set(),
-            inputLanguage: 'modern',
+            inputLanguage: 'ancient',
             outputLanguages: ['modern', 'english'],
             model: 'opus'
         };
@@ -1156,14 +1156,26 @@
             }
         });
 
-        // Load sample text
+        // Load sample text based on selected input language
         document.getElementById('load-sample-btn').addEventListener('click', async () => {
+            const inputLanguage = translationData.inputLanguage;
+            const sampleFile = `/sample_text/sample_text_${inputLanguage}.txt`;
+            
             try {
-                const response = await fetch('sample_text.txt');
+                const response = await fetch(sampleFile);
+                if (!response.ok) {
+                    throw new Error('Sample file not found');
+                }
                 const text = await response.text();
                 document.getElementById('input-text').value = text;
             } catch (error) {
-                document.getElementById('input-text').value = '君子以德治國，小人以力服人。智者察言觀色，愚者妄言妄行。';
+                // Fallback samples
+                const fallbacks = {
+                    'ancient': '君子以德治國，小人以力服人。智者察言觀色，愚者妄言妄行。',
+                    'modern': '從明天起，做一個幸福的人。',
+                    'english': 'To be, or not to be, that is the question.'
+                };
+                document.getElementById('input-text').value = fallbacks[inputLanguage] || fallbacks['ancient'];
             }
         });
 
