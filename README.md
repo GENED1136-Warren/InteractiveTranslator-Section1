@@ -5,10 +5,7 @@ Hi! This repo is the result of some basic Claude Code coding that I think led to
 
 It rose out of an assignment in [GENED1136](https://ealc.fas.harvard.edu/gen-ed-1136-power-and-civilization-china), where we were given a passage of ancient Chinese text:
 
-
-<format, put this in quotes>
-    為國以義，以名，以權。中國不治夷狄，義也。中國為中國，夷狄為夷。名也。二者為我用。故其來寇也。斯與之戰。其來服也。斯與之接。視其所以來而治之者。權也…中國之所以為中國。以其有是三者而已。苟捨其所以必勝之具。而獨以詐力為用。是既已化為夷狄矣。… 然則夷狄雖不義。常以信義望中國。中國以夷狄為不義。是以不用信義答之。不知此其所以為中國者。本不以夷狄之無而廢也。
-</format>
+> 為國以義，以名，以權。中國不治夷狄，義也。中國為中國，夷狄為夷。名也。二者為我用。故其來寇也。斯與之戰。其來服也。斯與之接。視其所以來而治之者。權也…中國之所以為中國。以其有是三者而已。苟捨其所以必勝之具。而獨以詐力為用。是既已化為夷狄矣。… 然則夷狄雖不義。常以信義望中國。中國以夷狄為不義。是以不用信義答之。不知此其所以為中國者。本不以夷狄之無而廢也。
 
 As both an English and a Chinese speaker, I thought that it would be really cool if we had a better interface than a simple chatbot in comparing these translations, with better ways of interrogating the text than a linear chat interface.
 
@@ -22,9 +19,9 @@ So I built this out!
 ### Translation Interface
 ![Translation Interface](docs/static/Display2_After.png)
 
-You can translate between Ancient Chinese, Modern Chinese, and English freely, display the translation side by side, and chat with the translated text. The translated text is naturally segmented into sentences, and clicking on any text highlights the correct sentence on all versions of the same text! Further, you can highlight multiple sentences and use it as context to chat with a LLM to engage deeper with the material :).
+You can translate between Ancient Chinese, Modern Chinese, and English freely, display the translation side by side, and chat with the translated text. The translated text is naturally segmented into sentences, and clicking on any text highlights the correct sentence on all versions of the same text! Further, you can highlight multiple sentences and use it as context to chat with an LLM to engage deeper with the material :).
 
-Currently, I only support the Claude Code SDK with Opus/Sonnet. But it should be easily extensible.
+Currently, I only support the Claude Code SDK with Opus/Sonnet but it should be easily extensible.
 
 ## 🚀 Installation
 

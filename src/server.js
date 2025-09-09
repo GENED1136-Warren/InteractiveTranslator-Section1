@@ -31,18 +31,21 @@ function createTranslationPrompt(text, inputLanguage, outputLanguages) {
     let prompt = `You are an expert translator. Translate the following ${languageDescriptions[inputLanguage]} text.
 
 IMPORTANT RULES:
-1. Split the text into logical sentences or phrases (use punctuation as guide)
-2. Mark each sentence with XML tags: <s1>, <s2>, <s3>, etc.
+1. Split the text into logical sentences or complete thoughts (use punctuation and meaning as guide)
+2. Mark each sentence/thought with XML tags: <s1>, <s2>, <s3>, etc.
 3. Maintain the SAME sentence numbers across all versions
 4. Translate with full context awareness - consider the whole text's meaning
 5. For Modern Chinese, use simplified characters
 6. For Ancient/Classical Chinese, use traditional characters and classical grammar (文言文)
 7. Preserve the meaning and style appropriate to each target language
+8. CRITICAL: PRESERVE LINE BREAKS WITHIN SENTENCES - If a sentence spans multiple lines in the original, keep those line breaks (\\n) inside the sentence tags
+9. For poetry: Keep related lines that form a complete thought together in one sentence tag with line breaks preserved
 
-Your output must be EXACTLY in this format:
+Your output must be EXACTLY in this format (note: preserve line breaks within sentence tags):
 
 ${inputLanguage.toUpperCase()}${inputLanguage === 'ancient' ? ' (文言文)' : ''}:
-<s1>first sentence in original ${languageDescriptions[inputLanguage]}</s1><s2>second sentence</s2>...
+<s1>first sentence or thought in original ${languageDescriptions[inputLanguage]}
+can span multiple lines if needed</s1><s2>second sentence</s2>...
 `;
 
     // Add output sections based on selected languages
@@ -50,13 +53,16 @@ ${inputLanguage.toUpperCase()}${inputLanguage === 'ancient' ? ' (文言文)' : '
         const langName = lang.toUpperCase();
         if (lang === 'ancient') {
             prompt += `\nANCIENT (文言文):
-<s1>first sentence in Classical/Ancient Chinese with particles like 之乎者也</s1><s2>second sentence in Classical Chinese</s2>...`;
+<s1>first sentence in Classical/Ancient Chinese with particles like 之乎者也
+can span multiple lines</s1><s2>second sentence in Classical Chinese</s2>...`;
         } else if (lang === 'modern') {
             prompt += `\nMODERN:
-<s1>first sentence in Modern Chinese</s1><s2>second sentence in Modern Chinese</s2>...`;
+<s1>first sentence in Modern Chinese
+can span multiple lines</s1><s2>second sentence in Modern Chinese</s2>...`;
         } else if (lang === 'english') {
             prompt += `\nENGLISH:
-<s1>first sentence in English</s1><s2>second sentence in English</s2>...`;
+<s1>first sentence in English
+can span multiple lines</s1><s2>second sentence in English</s2>...`;
         }
     });
 

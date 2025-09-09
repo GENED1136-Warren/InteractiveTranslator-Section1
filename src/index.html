@@ -36,6 +36,7 @@
             display: inline;
             padding: 2px 4px;
             border-radius: 3px;
+            white-space: pre-wrap;
             position: relative;
         }
         
@@ -359,6 +360,17 @@
             0%, 100% { opacity: 0; }
             50% { opacity: 1; }
         }
+        
+        /* Line break styles */
+        .line-break {
+            display: block;
+            height: 0.5em;
+        }
+        
+        .paragraph-break {
+            display: block;
+            height: 1.5em;
+        }
     </style>
 </head>
 <body>
@@ -414,7 +426,7 @@
                     <h3 class="font-medium mb-2 text-gray-700">輸出語言 · Output Languages</h3>
                     <div class="space-y-2">
                         <label class="language-option flex items-center">
-                            <input type="checkbox" name="output-lang" value="ancient" class="mr-2">
+                            <input type="checkbox" name="output-lang" value="ancient" class="mr-2" checked>
                             <span>古文 · Classical/Ancient Chinese (文言文)</span>
                         </label>
                         <label class="language-option flex items-center">
@@ -553,7 +565,7 @@
             sentences: new Map(),
             selectedSentences: new Set(),
             inputLanguage: 'ancient',
-            outputLanguages: ['modern', 'english'],
+            outputLanguages: ['ancient', 'modern', 'english'],
             model: 'opus'
         };
 
@@ -614,7 +626,7 @@
 
         // Parse sentences from response
         function parseSentences(response) {
-            const sentenceRegex = /<s(\d+)>(.*?)<\/s\1>/g;
+            const sentenceRegex = /<s(\d+)>(.*?)<\/s\1>/gs;
             
             // Create sentence data structure
             const sentenceMap = new Map();
@@ -694,7 +706,8 @@
             const contentDiv = document.createElement('div');
             contentDiv.className = 'panel-content';
             
-            // Add sentences with click handlers
+            // Add sentences with click handlers and preserve line breaks
+            let previousSentenceId = null;
             translationData.sentences.forEach((sentenceData, sentenceId) => {
                 const sentenceText = sentenceData[language];
                 if (sentenceText) {
@@ -704,7 +717,26 @@
                     sentenceSpan.textContent = sentenceText;
                     sentenceSpan.addEventListener('click', (e) => handleSentenceClick(sentenceId, e));
                     contentDiv.appendChild(sentenceSpan);
-                    contentDiv.appendChild(document.createTextNode(' '));
+                    
+                    // Check if we should add a line break after this sentence
+                    // For now, add space between sentences, but this is where we'd add line breaks
+                    // based on the structure detected in the response
+                    const sentenceNumber = parseInt(sentenceId.replace('s', ''));
+                    const nextSentenceId = 's' + (sentenceNumber + 1);
+                    
+                    // Check if there's a natural break point (e.g., end of stanza)
+                    // This is a simplified version - we'd need to detect actual line breaks from the response
+                    if (sentenceNumber % 4 === 0 && translationData.sentences.has(nextSentenceId)) {
+                        // Add paragraph break after every 4 sentences (for poetry structure)
+                        const breakEl = document.createElement('span');
+                        breakEl.className = 'paragraph-break';
+                        contentDiv.appendChild(breakEl);
+                    } else if (translationData.sentences.has(nextSentenceId)) {
+                        // Add line break between sentences
+                        const breakEl = document.createElement('span');
+                        breakEl.className = 'line-break';
+                        contentDiv.appendChild(breakEl);
+                    }
                 }
             });
             
