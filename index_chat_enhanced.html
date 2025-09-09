@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>China: Power and Civilization - Interactive Translation System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
+    <style>
+        :root {
+            --chinese-red: #8B0000;
+            --chinese-gold: #FFD700;
+            --jade-green: #00A86B;
+            --ink-black: #2B2B2B;
+            --paper-beige: #F5F5DC;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F5F5DC 0%, #FAFAF0 100%);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chinese-title {
+            font-family: 'Noto Serif SC', serif;
+            background: linear-gradient(135deg, var(--chinese-red), #CD5C5C);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .sentence {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline;
+            padding: 2px 4px;
+            border-radius: 3px;
+            position: relative;
+        }
+        
+        .sentence:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(139, 0, 0, 0.1);
+        }
+        
+        .sentence.highlighted {
+            background: linear-gradient(90deg, 
+                rgba(255, 215, 0, 0.3), 
+                rgba(255, 215, 0, 0.15));
+            border-left: 3px solid var(--chinese-red);
+            font-weight: 500;
+            padding-left: 6px;
+        }
+
+        .multi-select-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--chinese-red);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .multi-select-indicator.active {
+            display: block;
+        }
+        
+        .text-panel {
+            padding: 1.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            min-height: 400px;
+            overflow-y: auto;
+            max-height: 600px;
+            border-top: 4px solid;
+            position: relative;
+            background-image: 
+                linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,0.95)),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.03"><text x="50" y="50" font-size="40" text-anchor="middle" fill="%23000">文</text></svg>');
+            background-size: cover, 150px;
+            background-position: center;
+        }
+        
+        .panel-ancient { 
+            border-top-color: var(--chinese-red);
+            font-family: 'Noto Serif SC', serif;
+        }
+        .panel-modern { 
+            border-top-color: var(--jade-green);
+        }
+        .panel-english { 
+            border-top-color: #4A90E2;
+        }
+        
+        .chinese-button {
+            background: linear-gradient(135deg, var(--chinese-red), #CD5C5C);
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .chinese-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 0, 0, 0.3);
+            border-color: var(--chinese-gold);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(139, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--chinese-red);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .panel-ancient .panel-title { border-bottom-color: var(--chinese-red); }
+        .panel-modern .panel-title { border-bottom-color: var(--jade-green); }
+        .panel-english .panel-title { border-bottom-color: #4A90E2; }
+        
+        .language-option {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .language-option:hover {
+            background-color: rgba(255, 215, 0, 0.05);
+            border-color: var(--chinese-gold);
+        }
+        
+        .language-option input:checked + span {
+            color: var(--chinese-red);
+            font-weight: 500;
+        }
+        
+        .language-section {
+            background: linear-gradient(135deg, rgba(245, 245, 220, 0.3), rgba(255, 255, 255, 0.5));
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(139, 0, 0, 0.1);
+        }
+
+        .model-selector {
+            background: white;
+            border: 2px solid rgba(139, 0, 0, 0.2);
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .model-selector:focus {
+            outline: none;
+            border-color: var(--chinese-gold);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+
+        .chinese-header {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.05), rgba(255, 215, 0, 0.05));
+            border-bottom: 2px solid rgba(139, 0, 0, 0.1);
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .tip-box {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 255, 255, 0.5));
+            border-left: 4px solid var(--chinese-gold);
+            padding: 0.75rem 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-size: 14px;
+            color: var(--ink-black);
+        }
+
+        .selected-count {
+            background: var(--chinese-red);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        /* Enhanced Chat Interface Styles */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+            border: 1px solid rgba(139, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(245, 245, 220, 0.05));
+        }
+        
+        .chat-message {
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message-user {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .message-user .message-bubble {
+            background: linear-gradient(135deg, var(--chinese-red), #CD5C5C);
+            color: white;
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem 1rem 0 1rem;
+            word-wrap: break-word;
+        }
+        
+        .message-assistant {
+            display: flex;
+            justify-content: flex-start;
+        }
+        
+        .message-assistant .message-bubble {
+            background: white;
+            border: 1px solid rgba(0, 168, 107, 0.3);
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem 1rem 1rem 0;
+            word-wrap: break-word;
+        }
+        
+        .message-assistant .message-bubble.markdown-body {
+            padding: 1rem;
+        }
+        
+        .message-timestamp {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+            padding: 0 0.5rem;
+        }
+        
+        .chat-input-area {
+            border-top: 2px solid rgba(139, 0, 0, 0.1);
+            padding: 1rem;
+            background: white;
+        }
+        
+        .chat-input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .language-context-selector {
+            padding: 0.5rem;
+            border: 2px solid rgba(139, 0, 0, 0.2);
+            border-radius: 0.5rem;
+            background: white;
+            font-size: 0.875rem;
+            min-width: 150px;
+        }
+        
+        .language-context-selector:focus {
+            outline: none;
+            border-color: var(--chinese-gold);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+
+        .response-controls {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+        
+        .control-button {
+            padding: 0.25rem 0.75rem;
+            background: white;
+            border: 1px solid rgba(139, 0, 0, 0.2);
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .control-button:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: var(--chinese-gold);
+        }
+
+        .copy-success {
+            animation: fadeInOut 2s;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="chinese-header">
+        <div class="container mx-auto px-4">
+            <h1 class="chinese-title text-4xl font-bold text-center">
+                中華：權力與文明
+            </h1>
+            <p class="text-center text-lg mt-2 text-gray-700">China: Power and Civilization</p>
+            <p class="text-center text-sm mt-1 text-gray-600">Interactive Translation System · 互動翻譯系統</p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pb-8">
+        <!-- Input Section -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                <span style="color: var(--chinese-red);">📝</span> 輸入文本 · Input Text
+            </h2>
+
+            <!-- Model Selection -->
+            <div class="mb-4 flex items-center gap-4">
+                <label class="text-sm font-medium text-gray-700">AI 模型 · Model:</label>
+                <select id="model-selector" class="model-selector">
+                    <option value="opus" selected>Claude Opus (深度分析 · Deep Analysis)</option>
+                    <option value="sonnet">Claude Sonnet (快速響應 · Fast Response)</option>
+                </select>
+            </div>
+            
+            <!-- Language Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Input Language -->
+                <div class="language-section">
+                    <h3 class="font-medium mb-2 text-gray-700">輸入語言 · Input Language</h3>
+                    <div class="space-y-2">
+                        <label class="language-option flex items-center">
+                            <input type="radio" name="input-lang" value="ancient" class="mr-2">
+                            <span>古文 · Classical/Ancient Chinese (文言文)</span>
+                        </label>
+                        <label class="language-option flex items-center">
+                            <input type="radio" name="input-lang" value="modern" class="mr-2" checked>
+                            <span>現代中文 · Modern Chinese (简体)</span>
+                        </label>
+                        <label class="language-option flex items-center">
+                            <input type="radio" name="input-lang" value="english" class="mr-2">
+                            <span>英文 · English</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Output Languages -->
+                <div class="language-section">
+                    <h3 class="font-medium mb-2 text-gray-700">輸出語言 · Output Languages</h3>
+                    <div class="space-y-2">
+                        <label class="language-option flex items-center">
+                            <input type="checkbox" name="output-lang" value="ancient" class="mr-2">
+                            <span>古文 · Classical/Ancient Chinese (文言文)</span>
+                        </label>
+                        <label class="language-option flex items-center">
+                            <input type="checkbox" name="output-lang" value="modern" class="mr-2" checked>
+                            <span>現代中文 · Modern Chinese (简体)</span>
+                        </label>
+                        <label class="language-option flex items-center">
+                            <input type="checkbox" name="output-lang" value="english" class="mr-2" checked>
+                            <span>英文 · English</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                💡 <strong>提示 · Tip:</strong> Cmd/Ctrl+Click 多選句子 · Use Cmd/Ctrl+Click to select multiple sentences
+            </div>
+            
+            <textarea 
+                id="input-text" 
+                class="w-full p-4 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-red-800 focus:border-red-800 transition"
+                rows="6"
+                placeholder="輸入文本進行翻譯... Enter text to translate..."></textarea>
+            
+            <div class="mt-4 flex gap-3">
+                <button 
+                    id="translate-btn"
+                    class="px-6 py-2 chinese-button rounded-md transition">
+                    翻譯 · Translate
+                </button>
+                <button 
+                    id="load-sample-btn"
+                    class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">
+                    示例 · Load Sample
+                </button>
+                <button 
+                    id="clear-btn"
+                    class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+                    清除 · Clear
+                </button>
+            </div>
+            <div id="translation-status" class="mt-3 text-sm text-gray-600"></div>
+        </div>
+
+        <!-- Translation Panels (Dynamically shown) -->
+        <div id="translation-panels" class="mb-6" style="display: none;">
+            <div id="panels-container" class="grid gap-4">
+                <!-- Panels will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Enhanced Chat Interface -->
+        <div id="query-section" class="bg-white p-6 rounded-lg shadow-lg border border-gray-200" style="display: none;">
+            <h2 class="text-xl font-semibold mb-3 text-gray-800">
+                <span style="color: var(--chinese-red);">💬</span> 對話界面 · Chat Interface
+                <span id="selected-count" class="selected-count" style="display: none;">0 sentences</span>
+            </h2>
+            
+            <!-- Selected Text Display -->
+            <div class="mb-3">
+                <div class="text-sm text-gray-600 mb-1">選定文本 · Selected text:</div>
+                <div id="selected-text" class="p-3 bg-yellow-50 rounded-md text-gray-800 italic border-l-4 border-yellow-400">點擊句子進行選擇 · Click on a sentence to select it</div>
+            </div>
+            
+            <!-- Chat Container -->
+            <div class="chat-container">
+                <!-- Messages Area -->
+                <div id="chat-messages" class="chat-messages">
+                    <div class="text-center text-gray-500 text-sm py-8">
+                        選擇文本並開始對話 · Select text and start a conversation
+                    </div>
+                </div>
+                
+                <!-- Input Area -->
+                <div class="chat-input-area">
+                    <!-- Language Context Selector -->
+                    <div class="mb-2 flex items-center gap-2">
+                        <label class="text-sm text-gray-600">上下文語言 · Context Language:</label>
+                        <select id="context-language" class="language-context-selector">
+                            <!-- Options will be dynamically populated based on available translations -->
+                        </select>
+                    </div>
+                    
+                    <!-- Chat Input -->
+                    <div class="chat-input-group">
+                        <input 
+                            id="query-input" 
+                            type="text" 
+                            class="flex-1 p-3 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-red-800"
+                            placeholder="輸入訊息... Type a message..."
+                            disabled>
+                        <button 
+                            id="send-btn"
+                            class="px-6 py-2 chinese-button rounded-md disabled:bg-gray-400"
+                            disabled>
+                            發送 · Send
+                        </button>
+                        <button 
+                            id="clear-chat-btn"
+                            class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                            title="清除對話 · Clear conversation">
+                            🗑️
+                        </button>
+                    </div>
+                    
+                    <!-- Response Controls -->
+                    <div class="response-controls mt-2" style="display: none;" id="response-controls">
+                        <button id="copy-btn" class="control-button">
+                            📋 複製最後回應 · Copy Last Response
+                        </button>
+                        <button id="markdown-toggle" class="control-button">
+                            🔄 原始/格式化 · Raw/Formatted
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi-select indicator -->
+        <div id="multi-select-indicator" class="multi-select-indicator">
+            <span id="multi-select-count">0</span> sentences selected (Cmd/Ctrl+Click)
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let translationData = {
+            originalText: '',
+            sentences: new Map(),
+            selectedSentences: new Set(),
+            inputLanguage: 'modern',
+            outputLanguages: ['modern', 'english'],
+            model: 'opus'
+        };
+
+        let conversationHistory = {
+            messages: [],
+            selectedContext: null,
+            currentResponse: '',
+            showRawMarkdown: false
+        };
+
+        // Language selection handlers
+        document.querySelectorAll('input[name="input-lang"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                translationData.inputLanguage = e.target.value;
+                updateOutputLanguageOptions();
+            });
+        });
+
+        document.querySelectorAll('input[name="output-lang"]').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                updateSelectedOutputLanguages();
+            });
+        });
+
+        // Model selector
+        document.getElementById('model-selector').addEventListener('change', (e) => {
+            translationData.model = e.target.value;
+        });
+
+        // Context language change handler
+        document.getElementById('context-language').addEventListener('change', () => {
+            updateSelectedDisplay();
+        });
+
+        function updateOutputLanguageOptions() {
+            const inputLang = translationData.inputLanguage;
+            
+            // Uncheck the same language as input
+            document.querySelectorAll('input[name="output-lang"]').forEach(checkbox => {
+                if (checkbox.value === inputLang) {
+                    checkbox.checked = false;
+                    checkbox.parentElement.style.opacity = '0.5';
+                    checkbox.disabled = true;
+                } else {
+                    checkbox.parentElement.style.opacity = '1';
+                    checkbox.disabled = false;
+                }
+            });
+            
+            updateSelectedOutputLanguages();
+        }
+
+        function updateSelectedOutputLanguages() {
+            translationData.outputLanguages = Array.from(
+                document.querySelectorAll('input[name="output-lang"]:checked')
+            ).map(cb => cb.value);
+        }
+
+        // Parse sentences from response
+        function parseSentences(response) {
+            const sentences = new Map();
+            const sentenceRegex = /<s(\d+)>(.*?)<\/s\1>/g;
+            
+            // Create sentence data structure
+            const sentenceMap = new Map();
+            
+            // Parse original
+            let match;
+            while ((match = sentenceRegex.exec(response.original.text)) !== null) {
+                const id = match[1];
+                if (!sentenceMap.has(id)) {
+                    sentenceMap.set(id, {});
+                }
+                sentenceMap.get(id)[response.original.language] = match[2];
+            }
+            
+            // Parse translations
+            Object.entries(response.translations).forEach(([lang, text]) => {
+                sentenceRegex.lastIndex = 0;
+                while ((match = sentenceRegex.exec(text)) !== null) {
+                    const id = match[1];
+                    if (!sentenceMap.has(id)) {
+                        sentenceMap.set(id, {});
+                    }
+                    sentenceMap.get(id)[lang] = match[2];
+                }
+            });
+            
+            return sentenceMap;
+        }
+
+        // Display translation panels
+        function displayTranslations(response) {
+            const panelsContainer = document.getElementById('panels-container');
+            panelsContainer.innerHTML = '';
+            
+            // Parse sentences
+            translationData.sentences = parseSentences(response);
+            
+            // Determine which panels to show
+            const panelsToShow = [translationData.inputLanguage, ...translationData.outputLanguages];
+            const uniquePanels = [...new Set(panelsToShow)];
+            
+            // Set grid columns based on panel count
+            panelsContainer.className = `grid gap-4 ${
+                uniquePanels.length === 1 ? 'grid-cols-1' : 
+                uniquePanels.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 
+                'grid-cols-1 md:grid-cols-3'
+            }`;
+            
+            // Create panels
+            uniquePanels.forEach(lang => {
+                const panel = createLanguagePanel(lang);
+                panelsContainer.appendChild(panel);
+            });
+            
+            document.getElementById('translation-panels').style.display = 'block';
+        }
+
+        function createLanguagePanel(language) {
+            const panel = document.createElement('div');
+            const langClass = language === 'ancient' ? 'panel-ancient' : 
+                             language === 'modern' ? 'panel-modern' : 
+                             'panel-english';
+            
+            panel.className = `text-panel ${langClass}`;
+            
+            const titles = {
+                'ancient': '古文 · Classical Chinese',
+                'modern': '現代中文 · Modern Chinese',
+                'english': '英文 · English'
+            };
+            
+            const title = document.createElement('div');
+            title.className = 'panel-title';
+            title.textContent = titles[language] || language;
+            panel.appendChild(title);
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'panel-content';
+            
+            // Add sentences with click handlers
+            translationData.sentences.forEach((sentenceData, sentenceId) => {
+                const sentenceText = sentenceData[language];
+                if (sentenceText) {
+                    const sentenceSpan = document.createElement('span');
+                    sentenceSpan.className = 'sentence';
+                    sentenceSpan.setAttribute('data-sentence-id', sentenceId);
+                    sentenceSpan.textContent = sentenceText;
+                    sentenceSpan.addEventListener('click', (e) => handleSentenceClick(sentenceId, e));
+                    contentDiv.appendChild(sentenceSpan);
+                    contentDiv.appendChild(document.createTextNode(' '));
+                }
+            });
+            
+            panel.appendChild(contentDiv);
+            return panel;
+        }
+
+        // Handle sentence selection with multi-select support
+        function handleSentenceClick(sentenceId, event) {
+            if (event.metaKey || event.ctrlKey) {
+                // Multi-select mode
+                if (translationData.selectedSentences.has(sentenceId)) {
+                    translationData.selectedSentences.delete(sentenceId);
+                    removeSentenceHighlight(sentenceId);
+                } else {
+                    translationData.selectedSentences.add(sentenceId);
+                    addSentenceHighlight(sentenceId);
+                }
+            } else {
+                // Single select - clear others
+                clearAllHighlights();
+                translationData.selectedSentences.clear();
+                translationData.selectedSentences.add(sentenceId);
+                addSentenceHighlight(sentenceId);
+            }
+            
+            updateSelectedDisplay();
+            updateMultiSelectIndicator();
+            
+            // Store selected context for conversation
+            const contextLang = document.getElementById('context-language').value || translationData.inputLanguage;
+            conversationHistory.selectedContext = Array.from(translationData.selectedSentences).map(id => {
+                const sentenceData = translationData.sentences.get(id);
+                return sentenceData[contextLang] || sentenceData[translationData.inputLanguage] || Object.values(sentenceData)[0];
+            }).join(' ');
+        }
+
+        function addSentenceHighlight(sentenceId) {
+            document.querySelectorAll(`[data-sentence-id="${sentenceId}"]`).forEach(el => {
+                el.classList.add('highlighted');
+            });
+        }
+
+        function removeSentenceHighlight(sentenceId) {
+            document.querySelectorAll(`[data-sentence-id="${sentenceId}"]`).forEach(el => {
+                el.classList.remove('highlighted');
+            });
+        }
+
+        function clearAllHighlights() {
+            document.querySelectorAll('.sentence').forEach(el => {
+                el.classList.remove('highlighted');
+            });
+        }
+
+        function updateSelectedDisplay() {
+            const selectedCount = translationData.selectedSentences.size;
+            
+            if (selectedCount > 0) {
+                // Get all selected sentences text based on context language
+                const contextLang = document.getElementById('context-language').value || translationData.inputLanguage;
+                const selectedTexts = Array.from(translationData.selectedSentences).map(id => {
+                    const sentenceData = translationData.sentences.get(id);
+                    return sentenceData[contextLang] || sentenceData[translationData.inputLanguage] || Object.values(sentenceData)[0];
+                });
+                
+                document.getElementById('selected-text').textContent = selectedTexts.join(' ');
+                document.getElementById('query-input').disabled = false;
+                document.getElementById('send-btn').disabled = false;
+                
+                // Update selected count badge
+                const countBadge = document.getElementById('selected-count');
+                if (selectedCount > 1) {
+                    countBadge.textContent = `${selectedCount} sentences`;
+                    countBadge.style.display = 'inline-block';
+                } else {
+                    countBadge.style.display = 'none';
+                }
+            } else {
+                document.getElementById('selected-text').textContent = '點擊句子進行選擇 · Click on a sentence to select it';
+                document.getElementById('query-input').disabled = true;
+                document.getElementById('send-btn').disabled = true;
+                document.getElementById('selected-count').style.display = 'none';
+            }
+        }
+        
+        // Update context language options based on available translations
+        function updateContextLanguageOptions() {
+            const selector = document.getElementById('context-language');
+            selector.innerHTML = '';
+            
+            const languages = [translationData.inputLanguage, ...translationData.outputLanguages];
+            const languageNames = {
+                'ancient': '古文 · Ancient',
+                'modern': '現代中文 · Modern',
+                'english': '英文 · English'
+            };
+            
+            languages.forEach(lang => {
+                const option = document.createElement('option');
+                option.value = lang;
+                option.textContent = languageNames[lang] || lang;
+                if (lang === translationData.inputLanguage) {
+                    option.selected = true;
+                }
+                selector.appendChild(option);
+            });
+        }
+
+        function updateMultiSelectIndicator() {
+            const indicator = document.getElementById('multi-select-indicator');
+            const count = translationData.selectedSentences.size;
+            
+            if (count > 1) {
+                document.getElementById('multi-select-count').textContent = count;
+                indicator.classList.add('active');
+            } else {
+                indicator.classList.remove('active');
+            }
+        }
+
+        // Chat Functions
+        async function sendMessage() {
+            const question = document.getElementById('query-input').value.trim();
+            if (!question) {
+                alert('Please enter a message');
+                return;
+            }
+
+            if (translationData.selectedSentences.size === 0 && conversationHistory.messages.length === 0) {
+                alert('Please select at least one sentence first');
+                return;
+            }
+
+            const sendBtn = document.getElementById('send-btn');
+            const modelName = translationData.model === 'opus' ? 'Claude Opus' : 'Claude Sonnet';
+            
+            sendBtn.disabled = true;
+
+            // Add user message to chat
+            addMessageToChat('user', question);
+
+            // Add user message to history
+            conversationHistory.messages.push({
+                role: 'user',
+                content: question,
+                timestamp: new Date()
+            });
+
+            // Show typing indicator
+            const typingId = addTypingIndicator();
+
+            try {
+                const contextLang = document.getElementById('context-language').value || translationData.inputLanguage;
+                const response = await fetch('/api/query-claude', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        originalText: translationData.originalText,
+                        highlightedSentence: conversationHistory.selectedContext,
+                        userQuestion: question,
+                        conversationHistory: conversationHistory.messages.slice(0, -1),
+                        model: translationData.model
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Query failed: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                conversationHistory.currentResponse = result.response;
+                
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+                
+                // Add assistant response to chat
+                addMessageToChat('assistant', result.response);
+                
+                // Add assistant response to history
+                conversationHistory.messages.push({
+                    role: 'assistant',
+                    content: result.response,
+                    timestamp: new Date()
+                });
+                
+                // Clear input
+                document.getElementById('query-input').value = '';
+                
+                // Show response controls
+                document.getElementById('response-controls').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Query error:', error);
+                removeTypingIndicator(typingId);
+                addMessageToChat('system', `Error: ${error.message}`);
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        function addMessageToChat(role, content) {
+            const messagesContainer = document.getElementById('chat-messages');
+            
+            // Clear initial placeholder if present
+            if (messagesContainer.querySelector('.text-center')) {
+                messagesContainer.innerHTML = '';
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message message-${role}`;
+            
+            const bubble = document.createElement('div');
+            
+            if (role === 'assistant' && !conversationHistory.showRawMarkdown) {
+                bubble.className = 'message-bubble markdown-body';
+                bubble.innerHTML = marked.parse(content);
+            } else {
+                bubble.className = 'message-bubble';
+                bubble.textContent = content;
+            }
+            
+            messageDiv.appendChild(bubble);
+            
+            // Add timestamp
+            const timestamp = document.createElement('div');
+            timestamp.className = 'message-timestamp';
+            const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            timestamp.textContent = time;
+            
+            if (role === 'user') {
+                messageDiv.appendChild(timestamp);
+            } else {
+                messageDiv.insertBefore(timestamp, bubble);
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const messagesContainer = document.getElementById('chat-messages');
+            const typingDiv = document.createElement('div');
+            const id = 'typing-' + Date.now();
+            typingDiv.id = id;
+            typingDiv.className = 'chat-message message-assistant';
+            typingDiv.innerHTML = '<div class="message-bubble"><span class="loading"></span> Thinking...</div>';
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.remove();
+            }
+        }
+
+        function clearChat() {
+            conversationHistory.messages = [];
+            conversationHistory.currentResponse = '';
+            const messagesContainer = document.getElementById('chat-messages');
+            messagesContainer.innerHTML = `
+                <div class="text-center text-gray-500 text-sm py-8">
+                    選擇文本並開始對話 · Select text and start a conversation
+                </div>
+            `;
+            document.getElementById('response-controls').style.display = 'none';
+        }
+
+        function toggleMarkdown() {
+            conversationHistory.showRawMarkdown = !conversationHistory.showRawMarkdown;
+            
+            // Re-render all assistant messages
+            document.querySelectorAll('.message-assistant .message-bubble').forEach((bubble, index) => {
+                const message = conversationHistory.messages.filter(m => m.role === 'assistant')[index];
+                if (message) {
+                    if (conversationHistory.showRawMarkdown) {
+                        bubble.className = 'message-bubble';
+                        bubble.textContent = message.content;
+                    } else {
+                        bubble.className = 'message-bubble markdown-body';
+                        bubble.innerHTML = marked.parse(message.content);
+                    }
+                }
+            });
+        }
+
+        async function copyLastResponse() {
+            if (!conversationHistory.currentResponse) return;
+            
+            try {
+                await navigator.clipboard.writeText(conversationHistory.currentResponse);
+                const copyBtn = document.getElementById('copy-btn');
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✓ Copied!';
+                copyBtn.classList.add('copy-success');
+                
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.classList.remove('copy-success');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        }
+
+        // Translation handler
+        document.getElementById('translate-btn').addEventListener('click', async () => {
+            // Reset previous translation data
+            translationData.sentences.clear();
+            translationData.selectedSentences.clear();
+            clearAllHighlights();
+            
+            const text = document.getElementById('input-text').value.trim();
+            if (!text) {
+                alert('Please enter text to translate');
+                return;
+            }
+
+            if (translationData.outputLanguages.length === 0) {
+                alert('Please select at least one output language');
+                return;
+            }
+
+            const statusEl = document.getElementById('translation-status');
+            const translateBtn = document.getElementById('translate-btn');
+            const modelName = translationData.model === 'opus' ? 'Claude Opus' : 'Claude Sonnet';
+            
+            statusEl.innerHTML = `<span class="loading"></span> Translating with ${modelName}...`;
+            translateBtn.disabled = true;
+            translationData.originalText = text;
+
+            try {
+                const response = await fetch('/api/segment-and-translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        inputLanguage: translationData.inputLanguage,
+                        outputLanguages: translationData.outputLanguages,
+                        model: translationData.model
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Translation failed: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                displayTranslations(result);
+                statusEl.textContent = 'Translation complete!';
+                document.getElementById('query-section').style.display = 'block';
+                updateSelectedDisplay();
+                updateContextLanguageOptions();
+            } catch (error) {
+                console.error('Translation error:', error);
+                statusEl.textContent = `Error: ${error.message}`;
+            } finally {
+                translateBtn.disabled = false; // Re-enable for new translations
+            }
+        });
+
+        // Event Listeners
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+        document.getElementById('clear-chat-btn').addEventListener('click', clearChat);
+        document.getElementById('copy-btn').addEventListener('click', copyLastResponse);
+        document.getElementById('markdown-toggle').addEventListener('click', toggleMarkdown);
+        
+        // Enter key to send
+        document.getElementById('query-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Load sample text
+        document.getElementById('load-sample-btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('translate_this_text.txt');
+                const text = await response.text();
+                document.getElementById('input-text').value = text;
+            } catch (error) {
+                document.getElementById('input-text').value = '君子以德治國，小人以力服人。智者察言觀色，愚者妄言妄行。';
+            }
+        });
+
+        // Clear button
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            document.getElementById('input-text').value = '';
+            document.getElementById('translation-panels').style.display = 'none';
+            document.getElementById('query-section').style.display = 'none';
+            document.getElementById('translation-status').textContent = '';
+            translationData.sentences.clear();
+            translationData.selectedSentences.clear();
+            clearAllHighlights();
+            clearChat();
+        });
+
+        // Initialize
+        updateOutputLanguageOptions();
+    </script>
+</body>
+</html>

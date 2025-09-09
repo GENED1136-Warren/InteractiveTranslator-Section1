@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple UI Test</title>
+</head>
+<body>
+    <h1>Testing Translation System</h1>
+    <button id="test-translate">Test Translation</button>
+    <button id="test-query">Test Query</button>
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        document.getElementById('test-translate').addEventListener('click', async () => {
+            results.innerHTML = 'Testing translation...';
+            try {
+                const response = await fetch('/api/segment-and-translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: '君子以德治國。',
+                        inputLanguage: 'ancient',
+                        outputLanguages: ['modern', 'english'],
+                        model: 'sonnet'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                results.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                console.log('Translation successful:', data);
+            } catch (error) {
+                results.innerHTML = 'Error: ' + error.message;
+                console.error('Translation error:', error);
+            }
+        });
+        
+        document.getElementById('test-query').addEventListener('click', async () => {
+            results.innerHTML = 'Testing query...';
+            try {
+                const response = await fetch('/api/query-claude', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        originalText: '君子以德治國。',
+                        highlightedSentence: '君子以德治國',
+                        userQuestion: 'What does this mean?',
+                        conversationHistory: [],
+                        model: 'sonnet'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                results.innerHTML = '<pre>' + JSON.stringify(data, null, 2).substring(0, 500) + '...</pre>';
+                console.log('Query successful:', data);
+            } catch (error) {
+                results.innerHTML = 'Error: ' + error.message;
+                console.error('Query error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
