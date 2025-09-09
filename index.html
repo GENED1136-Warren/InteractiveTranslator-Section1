@@ -222,7 +222,7 @@
         }
         
         .chat-container.expanded {
-            height: 750px;
+            height: 1250px; /* 250% of 500px original */
         }
         
         .chat-messages {
@@ -529,6 +529,9 @@
                         <button id="copy-btn" class="control-button">
                             📋 複製最後回應 · Copy Last Response
                         </button>
+                        <button id="copy-conversation-btn" class="control-button">
+                            📝 複製整個對話 · Copy Entire Conversation
+                        </button>
                         <button id="markdown-toggle" class="control-button">
                             🔄 原始/格式化 · Raw/Formatted
                         </button>
@@ -833,7 +836,8 @@
 
         // Chat Functions
         async function sendMessage() {
-            const question = document.getElementById('query-input').value.trim();
+            const inputField = document.getElementById('query-input');
+            const question = inputField.value.trim();
             if (!question) {
                 alert('Please enter a message');
                 return;
@@ -848,6 +852,9 @@
             const modelName = translationData.model === 'opus' ? 'Claude Opus' : 'Claude Sonnet';
             
             sendBtn.disabled = true;
+            
+            // Clear input field immediately after sending
+            inputField.value = '';
 
             // Add user message to chat
             addMessageToChat('user', question);
@@ -895,9 +902,6 @@
                     content: result.response,
                     timestamp: new Date()
                 });
-                
-                // Clear input
-                document.getElementById('query-input').value = '';
                 
                 // Show response controls
                 document.getElementById('response-controls').style.display = 'flex';
@@ -1029,6 +1033,46 @@
                 console.error('Failed to copy:', err);
             }
         }
+        
+        async function copyEntireConversation() {
+            if (conversationHistory.messages.length === 0) {
+                alert('No conversation to copy');
+                return;
+            }
+            
+            // Format conversation in markdown
+            let markdown = '# Translation System Conversation\n\n';
+            markdown += `**Date:** ${new Date().toLocaleDateString()}\n`;
+            markdown += `**Selected Text:** ${conversationHistory.selectedContext || 'N/A'}\n\n`;
+            markdown += '---\n\n';
+            
+            conversationHistory.messages.forEach((msg, index) => {
+                if (msg.role === 'user') {
+                    markdown += `## User:\n${msg.content}\n\n`;
+                } else if (msg.role === 'assistant') {
+                    markdown += `## Assistant:\n${msg.content}\n\n`;
+                    if (index < conversationHistory.messages.length - 1) {
+                        markdown += '---\n\n';
+                    }
+                }
+            });
+            
+            try {
+                await navigator.clipboard.writeText(markdown);
+                const copyBtn = document.getElementById('copy-conversation-btn');
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✓ Copied!';
+                copyBtn.classList.add('copy-success');
+                
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.classList.remove('copy-success');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy conversation:', err);
+                alert('Failed to copy conversation to clipboard');
+            }
+        }
 
         // Translation handler
         document.getElementById('translate-btn').addEventListener('click', async () => {
@@ -1101,6 +1145,7 @@
         document.getElementById('send-btn').addEventListener('click', sendMessage);
         document.getElementById('clear-chat-btn').addEventListener('click', clearChat);
         document.getElementById('copy-btn').addEventListener('click', copyLastResponse);
+        document.getElementById('copy-conversation-btn').addEventListener('click', copyEntireConversation);
         document.getElementById('markdown-toggle').addEventListener('click', toggleMarkdown);
         
         // Enter key to send
