@@ -385,6 +385,63 @@
     </div>
 
     <div class="container mx-auto px-4 pb-8">
+        <!-- Settings Panel (Collapsible) -->
+        <div class="bg-white rounded-lg shadow-lg mb-6 border border-gray-200 overflow-hidden">
+            <button id="settings-toggle" class="w-full p-4 text-left flex items-center justify-between hover:bg-gray-50 transition">
+                <div class="flex items-center gap-3">
+                    <span style="font-size: 1.2em;">⚙️</span>
+                    <span class="text-lg font-semibold text-gray-800">自定義提示 · Custom Prompts</span>
+                </div>
+                <svg id="settings-arrow" class="w-5 h-5 text-gray-600 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            
+            <div id="settings-content" class="hidden border-t border-gray-200">
+                <div class="p-6 space-y-6">
+                    <!-- Translation Prompt Customization -->
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="text-sm font-semibold text-gray-700">翻譯指令 · Translation Instructions</label>
+                            <button id="reset-translation-prompt" class="text-xs px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded transition">
+                                重置 · Reset
+                            </button>
+                        </div>
+                        <div class="text-xs text-gray-500 mb-2">
+                            建議 · Suggestions: "Focus on preserving poetic meter", "Use formal academic language", "Emphasize cultural context"
+                        </div>
+                        <textarea 
+                            id="custom-translation-prompt" 
+                            class="w-full p-3 border border-gray-300 rounded-md text-sm font-mono"
+                            rows="4"
+                            placeholder="You are an expert translator. Provide accurate translations that preserve cultural and historical context..."></textarea>
+                    </div>
+                    
+                    <!-- Explanation Prompt Customization -->
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="text-sm font-semibold text-gray-700">解釋指令 · Explanation Instructions</label>
+                            <button id="reset-explanation-prompt" class="text-xs px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded transition">
+                                重置 · Reset
+                            </button>
+                        </div>
+                        <div class="text-xs text-gray-500 mb-2">
+                            建議 · Suggestions: "Explain like a patient teacher", "Focus on etymology", "Include historical context"
+                        </div>
+                        <textarea 
+                            id="custom-explanation-prompt" 
+                            class="w-full p-3 border border-gray-300 rounded-md text-sm font-mono"
+                            rows="4"
+                            placeholder="You are an expert in linguistics and Classical Chinese. Provide insightful explanations..."></textarea>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 bg-blue-50 p-3 rounded">
+                        💡 這些設置會保存在您的瀏覽器中 · These settings will be saved in your browser
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Input Section -->
         <div class="bg-white p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">
@@ -575,6 +632,59 @@
             currentResponse: '',
             showRawMarkdown: false
         };
+
+        // Default prompts
+        const DEFAULT_TRANSLATION_PROMPT = "You are an expert translator. Provide accurate translations that preserve cultural and historical context.";
+        const DEFAULT_EXPLANATION_PROMPT = "You are an expert in linguistics, Classical Chinese literature, and translation. Provide insightful explanations that help users understand the text deeply across languages and cultures.";
+
+        // Settings Panel functionality
+        const settingsToggle = document.getElementById('settings-toggle');
+        const settingsContent = document.getElementById('settings-content');
+        const settingsArrow = document.getElementById('settings-arrow');
+        const customTranslationPrompt = document.getElementById('custom-translation-prompt');
+        const customExplanationPrompt = document.getElementById('custom-explanation-prompt');
+        const resetTranslationBtn = document.getElementById('reset-translation-prompt');
+        const resetExplanationBtn = document.getElementById('reset-explanation-prompt');
+
+        // Load saved prompts from localStorage
+        function loadCustomPrompts() {
+            const savedTranslation = localStorage.getItem('customTranslationPrompt');
+            const savedExplanation = localStorage.getItem('customExplanationPrompt');
+            
+            customTranslationPrompt.value = savedTranslation || DEFAULT_TRANSLATION_PROMPT;
+            customExplanationPrompt.value = savedExplanation || DEFAULT_EXPLANATION_PROMPT;
+        }
+
+        // Save prompts to localStorage
+        function saveCustomPrompts() {
+            localStorage.setItem('customTranslationPrompt', customTranslationPrompt.value);
+            localStorage.setItem('customExplanationPrompt', customExplanationPrompt.value);
+        }
+
+        // Toggle settings panel
+        settingsToggle.addEventListener('click', () => {
+            settingsContent.classList.toggle('hidden');
+            settingsArrow.style.transform = settingsContent.classList.contains('hidden') ? 
+                'rotate(0deg)' : 'rotate(180deg)';
+        });
+
+        // Reset buttons
+        resetTranslationBtn.addEventListener('click', () => {
+            customTranslationPrompt.value = DEFAULT_TRANSLATION_PROMPT;
+            saveCustomPrompts();
+        });
+
+        resetExplanationBtn.addEventListener('click', () => {
+            customExplanationPrompt.value = DEFAULT_EXPLANATION_PROMPT;
+            saveCustomPrompts();
+        });
+
+        // Save on change
+        customTranslationPrompt.addEventListener('change', saveCustomPrompts);
+        customExplanationPrompt.addEventListener('change', saveCustomPrompts);
+
+        // Load prompts on page load
+        loadCustomPrompts();
 
         // Language selection handlers
         document.querySelectorAll('input[name="input-lang"]').forEach(radio => {
@@ -911,7 +1021,9 @@
                         highlightedSentence: conversationHistory.selectedContext,
                         userQuestion: question,
                         conversationHistory: conversationHistory.messages.slice(0, -1),
-                        model: translationData.model
+                        model: translationData.model,
+                        customExplanationPrompt: customExplanationPrompt.value !== DEFAULT_EXPLANATION_PROMPT ?
+                            customExplanationPrompt.value : undefined
                     })
                 });
 
@@ -1151,7 +1263,9 @@
                         text,
                         inputLanguage: translationData.inputLanguage,
                         outputLanguages: translationData.outputLanguages,
-                        model: translationData.model
+                        model: translationData.model,
+                        customTranslationPrompt: customTranslationPrompt.value !== DEFAULT_TRANSLATION_PROMPT ? 
+                            customTranslationPrompt.value : undefined
                     })
                 });
 

@@ -133,11 +133,19 @@ async function performTranslationWithRetry(translationPrompt, systemPrompt, mode
             let messageCount = 0;
             
             // Map model selection to Claude Code SDK format
-            const modelOption = model === 'sonnet' ? 'sonnet' : undefined;
+            // Use "sonnet" or "opus" directly, or undefined for default
+            let modelOption;
+            if (model === 'sonnet') {
+                modelOption = 'sonnet';
+            } else if (model === 'opus') {
+                modelOption = 'opus';
+            } else {
+                modelOption = undefined; // Use SDK default (usually opus)
+            }
             
-            // Add timeout handling
+            // Add timeout handling - 30 minutes
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Translation timeout after 30 seconds')), 30000);
+                setTimeout(() => reject(new Error('Translation timeout after 30 minutes')), 1800000);
             });
             
             const translationPromise = (async () => {
@@ -203,7 +211,7 @@ async function performTranslationWithRetry(translationPrompt, systemPrompt, mode
 
 // Endpoint to segment and translate text with XML markers
 app.post('/api/segment-and-translate', async (req, res) => {
-    const { text, inputLanguage, outputLanguages, model } = req.body;
+    const { text, inputLanguage, outputLanguages, model, customTranslationPrompt } = req.body;
     
     if (!text) {
         return res.status(400).json({ error: 'Text is required' });
@@ -228,13 +236,18 @@ app.post('/api/segment-and-translate', async (req, res) => {
         
         const translationPrompt = createTranslationPrompt(text, inputLanguage, outputLanguages);
         
+        // Use custom prompt if provided, otherwise use defaults
         let systemPrompt = '';
-        if (inputLanguage === 'ancient') {
-            systemPrompt = "You are an expert in Classical Chinese (文言文) literature and translation. Provide accurate translations that preserve cultural and historical context. When translating TO Ancient Chinese, use authentic classical grammar with particles like 之, 乎, 者, 也, 矣, 焉, 哉, 而, 於, 為, etc.";
-        } else if (inputLanguage === 'modern') {
-            systemPrompt = "You are an expert translator specializing in Modern Chinese. Provide natural, fluent translations. When translating TO Ancient Chinese (文言文), use authentic classical grammar and vocabulary with appropriate particles.";
+        if (customTranslationPrompt) {
+            systemPrompt = customTranslationPrompt;
         } else {
-            systemPrompt = "You are an expert translator from English. Provide accurate, culturally appropriate translations. When translating TO Ancient Chinese (文言文), use authentic classical grammar with particles like 之, 乎, 者, 也, etc.";
+            if (inputLanguage === 'ancient') {
+                systemPrompt = "You are an expert in Classical Chinese (文言文) literature and translation. Provide accurate translations that preserve cultural and historical context. When translating TO Ancient Chinese, use authentic classical grammar with particles like 之, 乎, 者, 也, 矣, 焉, 哉, 而, 於, 為, etc.";
+            } else if (inputLanguage === 'modern') {
+                systemPrompt = "You are an expert translator specializing in Modern Chinese. Provide natural, fluent translations. When translating TO Ancient Chinese (文言文), use authentic classical grammar and vocabulary with appropriate particles.";
+            } else {
+                systemPrompt = "You are an expert translator from English. Provide accurate, culturally appropriate translations. When translating TO Ancient Chinese (文言文), use authentic classical grammar with particles like 之, 乎, 者, 也, etc.";
+            }
         }
         
         // Perform translation with retry logic
@@ -298,7 +311,7 @@ app.post('/api/segment-and-translate', async (req, res) => {
 
 // Endpoint for Claude queries about selected text
 app.post('/api/query-claude', async (req, res) => {
-    const { originalText, highlightedSentence, userQuestion, conversationHistory, model } = req.body;
+    const { originalText, highlightedSentence, userQuestion, conversationHistory, model, customExplanationPrompt } = req.body;
     
     if (!originalText || !highlightedSentence || !userQuestion) {
         return res.status(400).json({ 
@@ -333,14 +346,25 @@ Please provide a detailed answer about the highlighted text in the context of th
         
         // Map model selection to Claude Code SDK format
         // Use "sonnet" directly or undefined for default (opus)
-        const modelOption = model === 'sonnet' ? 'sonnet' : undefined; // undefined uses default (opus)
+        let modelOption;
+        if (model === 'sonnet') {
+            modelOption = 'sonnet';
+        } else if (model === 'opus') {
+            modelOption = 'opus';
+        } else {
+            modelOption = undefined; // Use SDK default (usually opus)
+        }
+        
+        // Use custom explanation prompt if provided
+        const explanationSystemPrompt = customExplanationPrompt || 
+            "You are an expert in linguistics, Classical Chinese literature, and translation. Provide insightful explanations that help users understand the text deeply across languages and cultures.";
         
         for await (const message of query({
             prompt: queryPrompt,
             options: {
                 ...(modelOption && { model: modelOption }), // Only add model if specified
                 maxTurns: 3,
-                systemPrompt: "You are an expert in linguistics, Classical Chinese literature, and translation. Provide insightful explanations that help users understand the text deeply across languages and cultures.",
+                systemPrompt: explanationSystemPrompt,
                 allowedTools: ["WebSearch"], // Allow web search for historical context
                 disallowedTools: ['TodoWrite', 'Task'] // Disallow task management tools
             }
