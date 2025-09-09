@@ -25,6 +25,7 @@ Thumbs.db
 # Logs
 logs/
 *.log
+server.log
 
 # Testing
 coverage/
@@ -42,5 +43,9 @@ build/
 # Backup files
 *.bak
 *_backup.*
-index_backup.html
-index_enhanced.html
+*_original.*
+index_*.html
+
+# Test artifacts
+test_*.png
+VERIFICATION_REPORT*.md

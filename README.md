@@ -1,30 +1,30 @@
 # China: Power and Civilization - Interactive Translation System
 # 中華文明 · 互動翻譯系統
 
-A sophisticated web application that provides interactive translations between Classical Chinese, Modern Chinese, and English, enhanced with AI-powered contextual analysis using the Claude Code SDK.
+Hi! This repo is the result of some basic Claude Code coding that I think led to a really delightful interface!
 
-## ✨ Features
+It rose out of an assignment in [GENED1136](https://ealc.fas.harvard.edu/gen-ed-1136-power-and-civilization-china), where we were given a passage of ancient Chinese text:
 
-### Core Translation Capabilities
-- **Flexible Language Selection**: Choose any language as input and translate to any combination of the others
-- **Bidirectional Translation**: Supports all 9 translation combinations between Ancient Chinese, Modern Chinese, and English
-- **Dynamic Panel Display**: Shows only selected languages in a responsive layout (1-3 columns)
-- **Ancient Chinese Generation**: Can generate authentic Classical Chinese (文言文) with proper particles from Modern Chinese or English
 
-### Interactive Features
-- **Multi-Sentence Selection**: Hold Cmd/Ctrl while clicking to select multiple sentences for analysis
-- **Synchronized Highlighting**: Click any sentence to highlight corresponding translations across all panels
-- **AI-Powered Queries**: Ask questions about selected sentences using Claude Code SDK
-- **Model Selection**: Choose between Claude Opus (higher quality) or Claude Sonnet (faster) models
+<format, put this in quotes>
+    為國以義，以名，以權。中國不治夷狄，義也。中國為中國，夷狄為夷。名也。二者為我用。故其來寇也。斯與之戰。其來服也。斯與之接。視其所以來而治之者。權也…中國之所以為中國。以其有是三者而已。苟捨其所以必勝之具。而獨以詐力為用。是既已化為夷狄矣。… 然則夷狄雖不義。常以信義望中國。中國以夷狄為不義。是以不用信義答之。不知此其所以為中國者。本不以夷狄之無而廢也。
+</format>
 
-### Design & UX
-- **Chinese-Inspired Aesthetic**: Professional interface with traditional Chinese design elements
-- **Color-Coded Panels**: 
-  - Ancient Chinese: Deep red borders
-  - Modern Chinese: Jade green borders
-  - English: Blue borders
-- **Visual Feedback**: Golden highlights for selected text, gradient backgrounds, and smooth animations
-- **Bilingual Interface**: Chinese and English labels throughout
+As both an English and a Chinese speaker, I thought that it would be really cool if we had a better interface than a simple chatbot in comparing these translations, with better ways of interrogating the text than a linear chat interface.
+
+So I built this out!
+
+## 📸 Screenshots
+
+### Input Screen
+![Input Screen](docs/static/Display1_InputScreen.png)
+
+### Translation Interface
+![Translation Interface](docs/static/Display2_After.png)
+
+You can translate between Ancient Chinese, Modern Chinese, and English freely, display the translation side by side, and chat with the translated text. The translated text is naturally segmented into sentences, and clicking on any text highlights the correct sentence on all versions of the same text! Further, you can highlight multiple sentences and use it as context to chat with a LLM to engage deeper with the material :).
+
+Currently, I only support the Claude Code SDK with Opus/Sonnet. But it should be easily extensible.
 
 ## 🚀 Installation
 
@@ -42,30 +42,6 @@ npm start
 ```
 http://localhost:3001
 ```
-
-## 📖 Usage Guide
-
-### Basic Translation
-1. **Select Input Language**: Choose from Ancient Chinese (古文), Modern Chinese (现代中文), or English
-2. **Select Output Languages**: Check one or more target languages (input language is automatically excluded)
-3. **Choose AI Model**: 
-   - Claude Opus (Latest): Higher quality, more nuanced translations
-   - Claude Sonnet (Latest): Faster processing, efficient for simpler texts
-4. **Enter Text**: Type or paste your text, or click "Load Sample" for the provided Classical Chinese text
-5. **Translate**: Click the "翻譯 · Translate" button
-
-### Advanced Features
-
-#### Multi-Sentence Selection
-- **Single Click**: Select one sentence
-- **Cmd/Ctrl + Click**: Add or remove sentences from selection
-- **Visual Indicator**: Bottom-right corner shows count when multiple sentences selected
-
-#### AI-Powered Analysis
-With sentences selected:
-1. Type your question in the query box
-2. Click "問 · Ask AI" to get contextual analysis
-3. The AI considers the full text context when answering
 
 ## 🏗️ Technical Architecture
 
@@ -150,23 +126,6 @@ The included `translate_this_text.txt` contains a Classical Chinese philosophica
 - `@anthropic-ai/claude-code`: Claude Code SDK for AI integration
 - `cors`: Cross-origin resource sharing
 - `dotenv`: Environment variable management
-
-## 🌟 Key Improvements
-
-### From Original System
-1. **Enhanced Branding**: "China: Power and Civilization" title with bilingual elements
-2. **Model Selection**: Choose between Opus and Sonnet models for speed/quality tradeoff
-3. **Multi-Sentence Selection**: Cmd/Ctrl+Click for selecting multiple sentences
-4. **Professional Chinese Aesthetic**: Traditional design elements and color scheme
-5. **Better Visual Feedback**: Golden highlights, gradient backgrounds, status indicators
-
-## 📝 Notes
-
-- The system uses the Claude Code SDK's streaming responses for real-time feedback
-- Translation maintains full context awareness for accurate cultural and linguistic rendering
-- XML markers ensure precise alignment between language versions
-- Multi-sentence queries provide richer contextual analysis
-- Model selection allows users to balance quality vs speed based on their needs
 
 ## 🤝 Contributing
 

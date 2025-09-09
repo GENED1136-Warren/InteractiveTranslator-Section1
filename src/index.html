@@ -212,7 +212,7 @@
         .chat-container {
             display: flex;
             flex-direction: column;
-            height: 120px;
+            height: 300px; /* Increased from 120px to show input area */
             transition: height 0.3s ease;
             border: 1px solid rgba(139, 0, 0, 0.2);
             border-radius: 8px;
@@ -1159,7 +1159,7 @@
         // Load sample text
         document.getElementById('load-sample-btn').addEventListener('click', async () => {
             try {
-                const response = await fetch('translate_this_text.txt');
+                const response = await fetch('sample_text.txt');
                 const text = await response.text();
                 document.getElementById('input-text').value = text;
             } catch (error) {

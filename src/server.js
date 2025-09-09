@@ -13,7 +13,10 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+// Serve static files from src directory
 app.use(express.static(__dirname));
+// Also serve test files from tests directory
+app.use('/tests', express.static(join(__dirname, '..', 'tests')));
 
 // Helper function to create translation prompts based on language combinations
 function createTranslationPrompt(text, inputLanguage, outputLanguages) {
