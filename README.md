@@ -19,9 +19,11 @@ So I built this out!
 ### Translation Interface
 ![Translation Interface](docs/static/Display2_After.png)
 
-You can translate between Ancient Chinese, Modern Chinese, and English freely, display the translation side by side, and chat with the translated text. The translated text is naturally segmented into sentences, and clicking on any text highlights the correct sentence on all versions of the same text! Further, you can highlight multiple sentences and use it as context to chat with an LLM to engage deeper with the material :).
+You can translate between Ancient Chinese, Modern Chinese, and English freely, display the translation side by side, and chat with the translated text. The translated text is naturally segmented into sentences, and clicking on any text highlights the correct sentence on all versions of the same text! Further, you can highlight multiple sentences and use it as context to chat with an LLM to engage deeper with the material, and customize the prompts to let the LLM translate and chat in the ways you want.
 
 Currently, I only support the Claude Code SDK with Opus/Sonnet but it should be easily extensible.
+
+Note: the highlighting feature is partly inspired by the Harvard [CS2790R](https://beta.my.harvard.edu/course/COMPSCI2790R/2025-Fall/001) reading, [Concept-Annotated Examples for Library Comparison](https://dl.acm.org/doi/10.1145/3526113.3545647).
 
 ## 🚀 Installation
 
